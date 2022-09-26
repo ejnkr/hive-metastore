@@ -14,9 +14,9 @@ jobs:
     steps:      
       - uses: actions/checkout@v2
       - id: set_var
-        name: Set Image Tag as the package.json Version
+        name: Parse Image Tag from the Dockerfile
         run: |
-          content="$(cat Dockerfile | grep -E "ENV VERSION ?=" | awk -F '[ ="]+' '{ print $3; }')
+          content="$(cat Dockerfile | grep -E 'ENV VERSION ?=' | awk -F '[ ="]+' '{ print $3; }')"
           echo "::set-output name=VERSION::$content"
       - uses: docker/setup-qemu-action@v1
       - uses: docker/setup-buildx-action@v1
