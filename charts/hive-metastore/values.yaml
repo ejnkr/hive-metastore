@@ -11,19 +11,21 @@ externalPostgresql:
   enabled: false
   host: 
   port:
-  postgresqlUsername: hive
-  postgresqlPassword: hive
-  postgresqlDatabase: metastore
+  auth:
+    username: hive
+    database: metastore
+    password:
 postgresql:
   enabled: true
-  postgresqlUsername: hive
-  postgresqlPassword: hive
-  postgresqlDatabase: metastore
-  persistence:
-    enabled: true
-    size: 8Gi
+  auth:
+    username: hive
+    database: metastore
+    password: metastore
   primary:
     nodeSelector: {}
+    persistence:
+      enabled: true
+      size: 8Gi
 heapsize: 2048
 extraConfigYamlPath: 
 s3:

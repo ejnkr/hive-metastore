@@ -38,35 +38,35 @@ data:
         {{- if .Values.externalPostgresql.enabled }}
           <property>
               <name>javax.jdo.option.ConnectionURL</name>
-              <value>jdbc:postgresql://{{ .Values.externalPostgresql.host }}:{{ .Values.externalPostgresql.port }}/{{ .Values.externalPostgresql.postgresqlDatabase }}</value>
+              <value>jdbc:postgresql://{{ .Values.externalPostgresql.host }}:{{ .Values.externalPostgresql.port }}/{{ .Values.externalPostgresql.auth.database }}</value>
           </property>
-          {{- if .Values.externalPostgresql.postgresqlUsername }}
+          {{- if .Values.externalPostgresql.auth.username }}
           <property>
               <name>javax.jdo.option.ConnectionUserName</name>
-              <value>{{ .Values.externalPostgresql.postgresqlUsername }}</value>
+              <value>{{ .Values.externalPostgresql.auth.username }}</value>
           </property>
           {{- end }}
-          {{- if .Values.externalPostgresql.postgresqlPassword }}
+          {{- if .Values.externalPostgresql.auth.password }}
           <property>
               <name>javax.jdo.option.ConnectionPassword</name>
-              <value>{{ .Values.externalPostgresql.postgresqlPassword }}</value>
+              <value>{{ .Values.externalPostgresql.auth.password }}</value>
           </property>
           {{- end }}
         {{- else }}
           <property>
               <name>javax.jdo.option.ConnectionURL</name>
-              <value>jdbc:postgresql://{{ .Release.Name }}-postgresql/{{ .Values.postgresql.postgresqlDatabase }}</value>
+              <value>jdbc:postgresql://{{ .Release.Name }}-postgresql/{{ .Values.postgresql.auth.database }}</value>
           </property>
-          {{- if .Values.postgresql.postgresqlUsername }}
+          {{- if .Values.postgresql.auth.username }}
           <property>
               <name>javax.jdo.option.ConnectionUserName</name>
-              <value>{{ .Values.postgresql.postgresqlUsername }}</value>
+              <value>{{ .Values.postgresql.auth.username }}</value>
           </property>
           {{- end }}
-          {{- if .Values.postgresql.postgresqlPassword }}
+          {{- if .Values.postgresql.auth.password }}
           <property>
               <name>javax.jdo.option.ConnectionPassword</name>
-              <value>{{ .Values.postgresql.postgresqlPassword }}</value>
+              <value>{{ .Values.postgresql.auth.password }}</value>
           </property>
           {{- end }}
         {{- end }}
