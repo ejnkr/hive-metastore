@@ -1,0 +1,38 @@
+#!/bin/bash
+
+set -e
+
+start () {
+  if [[ -v EXTRA_CONFIG_YAML_PATH ]]; then
+    PROPERTIES=""
+    while read line; do
+      IFS=: read -r key val <<< $line
+      PROPERTIES="${PROPERTIES}  <property>\n    <name>${key}</name>\n    <value>${val}</value>\n  </property>\n"
+    done <"${EXTRA_CONFIG_YAML_PATH}"
+
+    echo "${PROPERTIES}"
+
+    HIVE_CONF_DIR="${HIVE_HOME}/generated-conf"
+    mkdir -p ${HIVE_CONF_DIR}
+    cp "${HIVE_HOME}/conf/*" "${HIVE_CONF_DIR}/"
+
+    sed -i "/<\/configuration>/i ${PROPERTIES}" ${HIVE_CONF_DIR}/metastore-site.xml
+  else
+    HIVE_CONF_DIR="${HIVE_HOME}/conf"
+  fi
+
+  cat ${HIVE_CONF_DIR}/metastore-site.xml
+  exec env "HIVE_CONF_DIR=${HIVE_CONF_DIR}" "${HIVE_HOME}/bin/start-metastore" "${@:2}"
+}
+
+migrate () {
+  exec "${HIVE_HOME}/bin/schematool" -initSchema -dbType postgres || true
+}
+
+if [ "$1" == "start" ]; then
+  start
+elif [ "$1" == "migrate" ]; then
+  migrate
+else 
+  echo "Available commands: start / migrate"
+fi

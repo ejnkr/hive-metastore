@@ -1,0 +1,8 @@
+apiVersion: v2
+name: hive-metastore
+version: 0.1.0
+dependencies:
+- name: postgresql
+  version: 10.2.6
+  repository: https://charts.bitnami.com/bitnami
+  condition: postgresql.external

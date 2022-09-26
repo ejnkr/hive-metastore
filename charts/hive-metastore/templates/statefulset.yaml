@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Release.Name | quote }}
+  labels:
+    app.kubernetes.io/name: hive-metastore
+    app.kubernetes.io/component: metastore
+    app.kubernetes.io/instance: {{ .Release.Name | quote }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: hive-metastore
+      app.kubernetes.io/component: metastore
+      app.kubernetes.io/instance: {{ .Release.Name | quote }}
+  serviceName: {{ .Release.Name }}
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: hive-metastore
+        app.kubernetes.io/component: metastore
+        app.kubernetes.io/instance: {{ .Release.Name | quote }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/config.yaml") . | sha256sum }}
+{{- if .Values.podAnnotations }}
+{{ toYaml .Values.podAnnotations | indent 8 }}
+{{- end }}
+    spec:
+      containers:
+      - name: metastore
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+        args: ['start']
+        resources:
+{{ toYaml .Values.resources | indent 10 }}
+        volumeMounts:
+        - name: hive-config
+          mountPath: /opt/metastore/conf
+        env:
+        - name: HIVE_METASTORE_HEAPSIZE
+          value: {{ .Values.heapsize | quote }}
+        - name: HADOOP_HEAPSIZE
+          value: {{ .Values.heapsize | quote }}
+        - name: HADOOP_CLIENT_OPTS
+          value: {{ printf "-Xmx%dm" (div (mul .Values.heapsize 3) 4) }}
+        {{- if .Values.extraConfigYamlPath }}
+        - name: EXTRA_CONFIG_YAML_PATH
+          value: {{ .Values.extraConfigYamlPath  }}
+        {{- end }}
+      initContainers:
+      - name: wait-db-ready
+        image: busybox:1.28
+        command: ['sh', '-c', 'until nslookup {{ .Release.Name }}-postgresql ; do echo waiting for {{ .Release.Name }}-postgresql; sleep 2; done && sleep 10']
+      - name: init-db
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+        volumeMounts:
+        - name: hive-config
+          mountPath: /opt/metastore/conf/
+        args: ['migrate']
+        #command: ['sh', '-c', '/opt/metastore/bin/schematool -initSchema -dbType postgres || true']
+      volumes:
+      - name: hive-config
+        configMap:
+          name: hive-metastore
+{{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+{{- end }}
+{{- if .Values.serviceAccount.create }}
+      serviceAccountName: {{ .Release.Name }}
+{{- end }}

@@ -1,0 +1,33 @@
+image:
+  repository: 
+  tag:
+resources: {}
+nodeSelector:
+serviceAccount: 
+  create: false
+  annotations: {}
+podAnnotations:
+externalPostgresql:
+  enabled: false
+  host: 
+  port:
+  postgresqlUsername: hive
+  postgresqlPassword: hive
+  postgresqlDatabase: metastore
+postgresql:
+  enabled: true
+  postgresqlUsername: hive
+  postgresqlPassword: hive
+  postgresqlDatabase: metastore
+  persistence:
+    enabled: true
+    size: 8Gi
+  primary:
+    nodeSelector: {}
+heapsize: 2048
+extraConfigYamlPath: 
+s3:
+  accessKey:
+  secretKey:
+  credentialsProvider: com.amazonaws.auth.DefaultAWSCredentialsProviderChain
+

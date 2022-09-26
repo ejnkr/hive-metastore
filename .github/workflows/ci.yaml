@@ -1,0 +1,58 @@
+name: Publish ECR
+
+on: 
+  push:
+    branches: ["main", "dev"]
+
+env:
+  REGISTRY: 215559030652.dkr.ecr.ap-northeast-2.amazonaws.com
+  REPO: sa-kube/hive-metastore
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:      
+      - uses: actions/checkout@v2
+      - id: set_var
+        name: Set Image Tag as the package.json Version
+        run: |
+          content="$(cat Dockerfile | grep -E "ENV VERSION ?=" | awk -F '[ ="]+' '{ print $3; }')
+          echo "::set-output name=VERSION::$content"
+      - uses: docker/setup-qemu-action@v1
+      - uses: docker/setup-buildx-action@v1
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.EJN_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.EJN_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+      - id: image_tag_exists
+        name: Check If Image Tag Already Exists
+        run: |
+          if docker manifest inspect $REGISTRY/$REPO:${{ steps.set_var.outputs.VERSION }} > /dev/null; then
+            echo "::set-output name=result::true"
+          else
+            echo "::set-output name=result::false"
+          fi
+      - name: Create ECR repo if not exists
+        if: steps.image_tag_exists.outputs.result == 'false'
+        run: aws ecr create-repository --repository-name "${REPO}" || true
+      - name: Login to Amazon ECR
+        id: login_ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: Build and push
+        id: docker_build
+        #if: steps.image_tag_exists.outputs.result == 'false'
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.REPO }}:${{ steps.set_var.outputs.VERSION }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            "GITHUB_PRIVATE_KEY=${{ secrets.SUBMODULE_SSH_KEY }}"
+      - name: Image digest
+        if: steps.image_tag_exists.outputs.result == 'false'
+        run: echo ${{ steps.docker_build.outputs.digest }}
+    outputs:
+      tags: ${{ env.REGISTRY }}/${{ env.REPO }}:${{ steps.set_var.outputs.VERSION }}

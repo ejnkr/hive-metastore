@@ -1,0 +1,13 @@
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ .Release.Name | quote }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: hive-metastore
+      app.kubernetes.io/component: metastore
+      app.kubernetes.io/instance: {{ .Release.Name | quote }}
+  ingress:
+  - from:
+    - podSelector: {}
