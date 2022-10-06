@@ -30,7 +30,8 @@ spec:
       - name: metastore
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
-        args: ['start']
+        command: ["/bin/entrypoint", "start"],
+        #args: ['start']
         resources:
 {{ toYaml .Values.resources | indent 10 }}
         volumeMounts:
@@ -57,7 +58,8 @@ spec:
         volumeMounts:
         - name: hive-config
           mountPath: /opt/metastore/conf/
-        args: ['migrate']
+        command: ["/bin/entrypoint", "migrate"],
+        #args: ['migrate']
         #command: ['sh', '-c', '/opt/metastore/bin/schematool -initSchema -dbType postgres || true']
       volumes:
       - name: hive-config
