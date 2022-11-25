@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: 215559030652.dkr.ecr.ap-northeast-2.amazonaws.com
-  REPO: sa-kube/hive-metastore
+  REPO: datateam/hive-metastore
 
 jobs:
   build-and-push:
