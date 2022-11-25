@@ -8,19 +8,27 @@ serviceAccount:
   annotations: {}
 podAnnotations:
 externalPostgresql:
-  enabled: false
   host: 
   port:
   auth:
-    username: hive
-    database: metastore
-    password:
+    database:
+    username:
+    existingSecret:
+    secretKeys:
+      userPasswordKey:
+  #*auth:
+  # username: hive
+  # database: metastore
+  # password:*/
 postgresql:
   enabled: true
   auth:
     username: hive
     database: metastore
     password: metastore
+    existingSecret:
+    secretKeys:
+      userPasswordKey:
   primary:
     nodeSelector: {}
     persistence:
@@ -32,4 +40,3 @@ s3:
   accessKey:
   secretKey:
   credentialsProvider: com.amazonaws.auth.DefaultAWSCredentialsProviderChain
-

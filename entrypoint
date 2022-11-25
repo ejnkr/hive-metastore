@@ -3,6 +3,11 @@
 set -e
 
 start () {
+  HIVE_CONF_DIR="${HIVE_HOME}/generated-conf"
+  mkdir -p "${HIVE_HOME}/conf"
+  mkdir -p "${HIVE_CONF_DIR}"
+  cp ${HIVE_HOME}/conf/* ${HIVE_CONF_DIR}/
+
   if [[ -v EXTRA_CONFIG_YAML_PATH ]]; then
     PROPERTIES=""
     while read line; do
@@ -12,13 +17,12 @@ start () {
 
     echo "${PROPERTIES}"
 
-    HIVE_CONF_DIR="${HIVE_HOME}/generated-conf"
-    mkdir -p ${HIVE_CONF_DIR}
-    cp "${HIVE_HOME}/conf/*" "${HIVE_CONF_DIR}/"
-
     sed -i "/<\/configuration>/i ${PROPERTIES}" ${HIVE_CONF_DIR}/metastore-site.xml
-  else
-    HIVE_CONF_DIR="${HIVE_HOME}/conf"
+  fi
+
+  if [[ -v POSTGRES_PASSWORD ]]; then
+    PROPERTIES="  <property>\n    <name>javax.jdo.option.ConnectionPassword</name>\n    <value>${POSTGRES_PASSWORD}</value>\n  </property>\n"
+    sed -i "/<\/configuration>/i ${PROPERTIES}" ${HIVE_CONF_DIR}/metastore-site.xml
   fi
 
   cat ${HIVE_CONF_DIR}/metastore-site.xml

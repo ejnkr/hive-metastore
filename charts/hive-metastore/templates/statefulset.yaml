@@ -48,6 +48,13 @@ spec:
         - name: EXTRA_CONFIG_YAML_PATH
           value: {{ .Values.extraConfigYamlPath  }}
         {{- end }}
+        {{- if or .Values.postgresql.auth.existingSecret .Values.externalPostgresql.auth.existingSecret }}
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ ternary .Values.postgresql.auth.existingSecret .Values.externalPostgresql.auth.existingSecret .Values.postgresql.enabled }}
+              key: {{ ternary .Values.postgresql.auth.userPasswordKey .Values.externalPostgresql.auth.userPasswordKey .Values.postgresql.enabled }}
+        {{- end }}
       initContainers:
       {{- if .Values.postgresql.enabled }}
       - name: wait-db-ready

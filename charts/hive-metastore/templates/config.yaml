@@ -35,7 +35,7 @@ data:
             <name>fs.s3a.path.style.access</name>
             <value>true</value>
         </property>
-        {{- if .Values.externalPostgresql.enabled }}
+        {{- if not .Values.postgresql.enabled }}
           <property>
               <name>javax.jdo.option.ConnectionURL</name>
               <value>jdbc:postgresql://{{ .Values.externalPostgresql.host }}:{{ .Values.externalPostgresql.port }}/{{ .Values.externalPostgresql.auth.database }}</value>
