@@ -53,7 +53,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: {{ ternary .Values.postgresql.auth.existingSecret .Values.externalPostgresql.auth.existingSecret .Values.postgresql.enabled }}
-              key: {{ ternary .Values.postgresql.auth.userPasswordKey .Values.externalPostgresql.auth.userPasswordKey .Values.postgresql.enabled }}
+              key: {{ ternary .Values.postgresql.auth.secretKeys.userPasswordKey .Values.externalPostgresql.auth.secretKeys.userPasswordKey .Values.postgresql.enabled }}
         {{- end }}
       initContainers:
       {{- if .Values.postgresql.enabled }}

@@ -1,6 +1,6 @@
 image:
-  repository: 
-  tag:
+  repository: 215559030652.dkr.ecr.ap-northeast-2.amazonaws.com/datateam/hive-metastore
+  tag: 0.0.2
 resources: {}
 nodeSelector:
 serviceAccount: 
