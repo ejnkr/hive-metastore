@@ -67,6 +67,7 @@ spec:
         volumeMounts:
         - name: hive-config
           mountPath: /opt/metastore/conf/
+        env:
         {{- if or .Values.postgresql.auth.existingSecret .Values.externalPostgresql.auth.existingSecret }}
         - name: POSTGRES_PASSWORD
           valueFrom:
