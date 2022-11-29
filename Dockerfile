@@ -1,7 +1,7 @@
 FROM openjdk:8u282-jre-slim-buster
 
 # CI tool should parses below line to determine the image version
-ENV VERSION=0.0.2
+ENV VERSION=0.0.3
 
 
 ENV HADOOP_VERSION=3.3.1
