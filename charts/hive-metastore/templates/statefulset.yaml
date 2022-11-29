@@ -67,6 +67,13 @@ spec:
         volumeMounts:
         - name: hive-config
           mountPath: /opt/metastore/conf/
+        {{- if or .Values.postgresql.auth.existingSecret .Values.externalPostgresql.auth.existingSecret }}
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ ternary .Values.postgresql.auth.existingSecret .Values.externalPostgresql.auth.existingSecret .Values.postgresql.enabled }}
+              key: {{ ternary .Values.postgresql.auth.secretKeys.userPasswordKey .Values.externalPostgresql.auth.secretKeys.userPasswordKey .Values.postgresql.enabled }}
+        {{- end }}
         command: ["/bin/entrypoint", "migrate"]
         #args: ['migrate']
         #command: ['sh', '-c', '/opt/metastore/bin/schematool -initSchema -dbType postgres || true']
