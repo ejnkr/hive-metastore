@@ -2,8 +2,9 @@
 
 set -e
 
+HIVE_CONF_DIR="${HIVE_HOME}/generated-conf"
+
 conf () {
-  HIVE_CONF_DIR="${HIVE_HOME}/generated-conf"
   mkdir -p "${HIVE_HOME}/conf"
   mkdir -p "${HIVE_CONF_DIR}"
   cp ${HIVE_HOME}/conf/* ${HIVE_CONF_DIR}/
@@ -31,7 +32,7 @@ start () {
 }
 
 migrate () {
-  exec "${HIVE_HOME}/bin/schematool" -initSchema -dbType postgres || true
+  exec env "HIVE_CONF_DIR=${HIVE_CONF_DIR}" "${HIVE_HOME}/bin/schematool" -initSchema -dbType postgres || true
 }
 
 conf
