@@ -66,9 +66,9 @@ spec:
           - sh
           - "-c"
           - |
-            bash << 'EOF'
+            /bin/sh << 'EOF'
             cp /opt/metastore/conf-base/* /opt/metastore/conf/
-            if [[ -v POSTGRES_PASSWORD ]]; then
+            if ! [[ -z POSTGRES_PASSWORD ]]; then
               PROPERTIES="  <property>\n    <name>javax.jdo.option.ConnectionPassword</name>\n    <value>${POSTGRES_PASSWORD}</value>\n  </property>\n"
               sed -i "/<\/configuration>/i ${PROPERTIES}" /opt/metastore/conf/metastore-site.xml
             fi
