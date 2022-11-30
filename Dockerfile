@@ -1,7 +1,7 @@
 FROM openjdk:8u282-jre-slim-buster
 
 # CI tool should parses below line to determine the image version
-ENV VERSION=0.0.4
+ENV VERSION=0.0.5
 
 
 ENV HADOOP_VERSION=3.3.1
@@ -36,7 +36,8 @@ WORKDIR ${HIVE_HOME}
 
 EXPOSE 9083
 
-COPY entrypoint /bin/entrypoint
+ENTRYPOINT /opt/metastore/bin/start-metastore
 
-ENTRYPOINT /bin/entrypoint
-#ENTRYPOINT /opt/metastore/bin/start-metastore
+#COPY entrypoint /bin/entrypoint
+
+#ENTRYPOINT /bin/entrypoint

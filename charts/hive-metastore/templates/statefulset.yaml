@@ -27,63 +27,72 @@ spec:
 {{- end }}
     spec:
       containers:
-      - name: metastore
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
-        command: ["/bin/entrypoint", "start"]
-        resources:
-{{ toYaml .Values.resources | indent 10 }}
-        volumeMounts:
-        - name: hive-config
-          mountPath: /opt/metastore/conf
-        env:
-        - name: HIVE_METASTORE_HEAPSIZE
-          value: {{ .Values.heapsize | quote }}
-        - name: HADOOP_HEAPSIZE
-          value: {{ .Values.heapsize | quote }}
-        - name: HADOOP_CLIENT_OPTS
-          value: {{ printf "-Xmx%dm" (div (mul .Values.heapsize 3) 4) }}
-        {{- if .Values.extraConfigYamlPath }}
-        - name: EXTRA_CONFIG_YAML_PATH
-          value: {{ .Values.extraConfigYamlPath  }}
-        {{- end }}
-        {{- if or .Values.postgresql.auth.existingSecret .Values.externalPostgresql.auth.existingSecret }}
-        - name: POSTGRES_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: {{ ternary .Values.postgresql.auth.existingSecret .Values.externalPostgresql.auth.existingSecret .Values.postgresql.enabled }}
-              key: {{ ternary .Values.postgresql.auth.secretKeys.userPasswordKey .Values.externalPostgresql.auth.secretKeys.userPasswordKey .Values.postgresql.enabled }}
-        {{- end }}
+        - name: metastore
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          #command: ['sh', '-c', '/opt/metastore/bin/schematool -initSchema -dbType postgres || true']
+          #command: ["/bin/entrypoint", "start"]
+          resources:
+  {{ toYaml .Values.resources | indent 12 }}
+          volumeMounts:
+          - name: hive-config
+            mountPath: /opt/metastore/conf
+          env:
+          - name: HIVE_METASTORE_HEAPSIZE
+            value: {{ .Values.heapsize | quote }}
+          - name: HADOOP_HEAPSIZE
+            value: {{ .Values.heapsize | quote }}
+          - name: HADOOP_CLIENT_OPTS
+            value: {{ printf "-Xmx%dm" (div (mul .Values.heapsize 3) 4) }}
       initContainers:
-      {{- if .Values.postgresql.enabled }}
-      - name: wait-db-ready
-        image: busybox:1.28
-        command: ['sh', '-c', 'until nslookup {{ .Release.Name }}-postgresql ; do echo waiting for {{ .Release.Name }}-postgresql; sleep 2; done && sleep 10']
-      {{- end }}
-      - name: init-db
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
-        volumeMounts:
-        - name: hive-config
-          mountPath: /opt/metastore/conf
-        env:
-        {{- if or .Values.postgresql.auth.existingSecret .Values.externalPostgresql.auth.existingSecret }}
-        - name: POSTGRES_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: {{ ternary .Values.postgresql.auth.existingSecret .Values.externalPostgresql.auth.existingSecret .Values.postgresql.enabled }}
-              key: {{ ternary .Values.postgresql.auth.secretKeys.userPasswordKey .Values.externalPostgresql.auth.secretKeys.userPasswordKey .Values.postgresql.enabled }}
+        - name: configure
+          image: busybox:1.28
+          env:
+          {{- if or .Values.postgresql.auth.existingSecret .Values.externalPostgresql.auth.existingSecret }}
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ ternary .Values.postgresql.auth.existingSecret .Values.externalPostgresql.auth.existingSecret .Values.postgresql.enabled }}
+                key: {{ ternary .Values.postgresql.auth.secretKeys.userPasswordKey .Values.externalPostgresql.auth.secretKeys.userPasswordKey .Values.postgresql.enabled }}
+          {{- end }}
+          volumeMounts:
+          - name: hive-config-base
+            mountPath: /opt/metastore/conf-base
+          - name: hive-config
+            mountPath: /opt/metastore/conf
+          command: 
+          - sh
+          - "-c"
+          - |
+            /bin/bash << 'EOF'
+            cp /opt/metastore/conf-base/* /opt/metastore/conf/
+            if [[ -v POSTGRES_PASSWORD ]]; then
+              PROPERTIES="  <property>\n    <name>javax.jdo.option.ConnectionPassword</name>\n    <value>${POSTGRES_PASSWORD}</value>\n  </property>\n"
+              sed -i "/<\/configuration>/i ${PROPERTIES}" /opt/metastore/conf/metastore-site.xml
+            fi
+            EOF
+        {{- if .Values.postgresql.enabled }}
+        - name: wait-db-ready
+          image: busybox:1.28
+          command: ['sh', '-c', 'until nslookup {{ .Release.Name }}-postgresql ; do echo waiting for {{ .Release.Name }}-postgresql; sleep 2; done && sleep 10']
         {{- end }}
-        command: ["/bin/entrypoint", "migrate"]
-        #command: ['sh', '-c', '/opt/metastore/bin/schematool -initSchema -dbType postgres || true']
+        - name: init-db
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          volumeMounts:
+          - name: hive-config
+            mountPath: /opt/metastore/conf
+          command: ['sh', '-c', '/opt/metastore/bin/schematool -initSchema -dbType postgres || true']
       volumes:
       - name: hive-config
+        emptyDir: {}
+      - name: hive-config-base
         configMap:
           name: hive-metastore
-{{- if .Values.nodeSelector }}
+      {{- if .Values.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.nodeSelector | indent 8 }}
-{{- end }}
-{{- if .Values.serviceAccount.create }}
+      {{- end }}
+      {{- if .Values.serviceAccount.create }}
       serviceAccountName: {{ .Release.Name }}
-{{- end }}
+      {{- end }}
