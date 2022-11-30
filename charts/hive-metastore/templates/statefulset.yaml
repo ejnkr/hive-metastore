@@ -31,7 +31,6 @@ spec:
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
         command: ["/bin/entrypoint", "start"]
-        #args: ['start']
         resources:
 {{ toYaml .Values.resources | indent 10 }}
         volumeMounts:
@@ -66,7 +65,7 @@ spec:
         imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
         volumeMounts:
         - name: hive-config
-          mountPath: /opt/metastore/conf/
+          mountPath: /opt/metastore/conf
         env:
         {{- if or .Values.postgresql.auth.existingSecret .Values.externalPostgresql.auth.existingSecret }}
         - name: POSTGRES_PASSWORD
@@ -76,7 +75,6 @@ spec:
               key: {{ ternary .Values.postgresql.auth.secretKeys.userPasswordKey .Values.externalPostgresql.auth.secretKeys.userPasswordKey .Values.postgresql.enabled }}
         {{- end }}
         command: ["/bin/entrypoint", "migrate"]
-        #args: ['migrate']
         #command: ['sh', '-c', '/opt/metastore/bin/schematool -initSchema -dbType postgres || true']
       volumes:
       - name: hive-config
