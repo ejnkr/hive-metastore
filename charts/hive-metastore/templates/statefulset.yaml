@@ -32,8 +32,10 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
           #command: ['sh', '-c', '/opt/metastore/bin/schematool -initSchema -dbType postgres || true']
           #command: ["/bin/entrypoint", "start"]
+          {{- if .Values.resources }}
           resources:
-  {{ toYaml .Values.resources | indent 12 }}
+{{ toYaml .Values.resources | indent 12 }}
+          {{- end }}
           volumeMounts:
           - name: hive-config
             mountPath: /opt/metastore/conf
